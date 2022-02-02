@@ -1,13 +1,10 @@
-local spriteManager = require("sprite")
+local spriteManager = require("Sprites.sprite")
+local util = require("util")
 local platformManager = {}
 platformManager.lst_platforms = {}
 
-local function removePlatform(p)
-    for i, plat in ipairs(platformManager.lst_platforms) do
-        if plat == p then
-            table.remove(platformManager.lst_platforms,i)
-        end
-    end
+platformManager.init = function ()
+    platformManager.lst_platforms = {}
 end
 
 
@@ -63,7 +60,7 @@ platformManager.newPlatform = function (pType,pX,pY,pStartY,pEndY,pTilesheet,pWi
             if platform.is_Falling then
                 platform.supprimeTimer = platform.supprimeTimer - dt
                 if platform.supprimeTimer < 0 then
-                    removePlatform(platform) -- remove from platform list
+                    util.removeSprite(platform,platformManager.lst_platforms) -- remove from platform list
                     platform.supprime = true-- remove from sprite List
                 end
 

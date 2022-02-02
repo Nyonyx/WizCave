@@ -1,19 +1,12 @@
-local spriteManager = require("sprite")
+local spriteManager = require("Sprites.sprite")
 local cartImg = love.graphics.newImage("Images/cart.png")
-
+local util = require("util")
 
 
 
 local cartManager = {}
 cartManager.lst_carts = {}
 
-local function removeCart(pCart)
-    for i, cart in ipairs(cartManager.lst_carts) do
-        if cart == pCart then
-            table.remove(cartManager.lst_carts,i)
-        end
-    end
-end
 
 cartManager.newCart = function (pX,pY)
     local cart = spriteManager.newSprite(pX,pY)
@@ -23,7 +16,7 @@ cartManager.newCart = function (pX,pY)
 
         -- TODO : supprimer les carts coter Droit (Map width)
         if cart.x < 0 then
-            removeCart(cart)
+            util.removeSprite(cart,cartManager.lst_carts)
             cart.supprime = true
         end
 

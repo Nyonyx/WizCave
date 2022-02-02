@@ -6,14 +6,11 @@ local util = require "util"
 -- Une tuile est un objet crée par la fonction createTile
 
 -- Import des modules pour creer les objets
-local platformManager = require("platforms")
-local slimeManager = require("slime")
-local gobelinManager = require("gobelin")
-
-
-
-local SpawnerManager = require("spawner")
-
+local platformManager = require("Sprites.platforms")
+local slimeManager = require("Sprites.slime")
+local gobelinManager = require("Sprites.gobelin")
+local SpawnerManager = require("Sprites.spawner")
+local batManager = require("Sprites.bat")
 
 local json = require("./libs/json")
 
@@ -57,20 +54,24 @@ local getTilesetInfo = function(pGlobalId,pMapTilesets)
 end
 
 
-MapManager.create = function (pTiledJson,pTileDict)
+MapManager.create = function (pTiledJson,pTileDict,pName)
     jsonMap = json.decode(pTiledJson);
     dict = pTileDict
     
     print("Creating Map...")
     local Map = {}
+    Map.playerSpawn = {x = 0,y = 0}
+    Map.endMap = {x = -1,y = -1,w = 0,h = 0, Next_Map = ""}
     Map.width = jsonMap.width
     Map.height = jsonMap.height
     Map.nLayers = #jsonMap.layers
+    Map.name = pName
     Map.grid = {} -- Tableau 3D de tuiles
 
     -- Retourne la propriete dune tuile
     -- renvoi nil si la propriete nexiste pas
     Map.getTilePropertie = function (pPropertieName,pTile)
+        if pTile == nil then return nil end
         if dict[pTile.tilesheet].tiles[pTile.id] ~= nil then
             local tileProperties = dict[pTile.tilesheet].tiles[pTile.id]
             return tileProperties[pPropertieName]
@@ -101,53 +102,31 @@ MapManager.create = function (pTiledJson,pTileDict)
     end
 
     -- Creation des objets
-    -- for l = 1, Map.height, 1 do
-    --     for c = 1, Map.width, 1 do
-    --         for lay = 1, Map.nLayers, 1 do
-    --             if jsonMap.layers[lay].type == "tilelayer" then
-                
-    --                 local type = Map.getTilePropertie("type",Map.grid[l][c][lay])
-    --                 if type == "platform1" then
-    --                     --print("good job")
-    --                     platformManager.newPlatform((c-1)*TILE_SIZE,(l-1)*TILE_SIZE)
-    --                 end
-
-    --             end
-    --         end
-    --     end
-    -- end
-    -- Creation des objets
     for lay = 1, Map.nLayers, 1 do
         if jsonMap.layers[lay].type == "objectgroup" then
             for i, obj in ipairs(jsonMap.layers[lay].objects) do
                 
                 local props = util.EnsureObject(obj.properties)
-                if obj.type == "Platform1" then
-                    print("creation plateforme 1")
 
+                if obj.type == "Player_Spawn" then
+                    Map.playerSpawn = {x = obj.x, y = obj.y}
 
-                    
+                elseif obj.type == "End_Map" then
+                    Map.endMap = {x = obj.x,y = obj.y,w = obj.width,h = obj.height, Next_Map = props.Next_Map}
+                elseif obj.type == "Platform1" then
                     platformManager.newPlatform(props.Subtype,obj.x,obj.y,props["StartY"],props["EndY"],dict["tileset.json"].img)
-                
-                
-                
                 elseif obj.type == "Slime" then
                     slimeManager.newSlime(obj.x,obj.y)
+                elseif obj.type == "Bat" then
+                    batManager.newBat(obj.x,obj.y)
                 elseif obj.type == "Gobelin" then
                     gobelinManager.newGobelin(obj.x,obj.y-16)
                 elseif obj.type == "Spawner" then
                     SpawnerManager.newSpawner(obj.x,obj.y,props.object)
                 end
-
-
-
             end
         end
     end
-
-
-
-
 
     ---------------------------------------------
 
@@ -159,9 +138,6 @@ MapManager.create = function (pTiledJson,pTileDict)
         end
     end
 
-    
-
-
     Map.isSolidAt = function(pX,pY)
         
         local lig = math.floor(pY/16)+1
@@ -171,9 +147,6 @@ MapManager.create = function (pTiledJson,pTileDict)
         if lig < 1 then
             return true
         end
-        if lig > Map.height then
-            return true
-        end
         if col < 1 then
             return true
         end
@@ -181,7 +154,7 @@ MapManager.create = function (pTiledJson,pTileDict)
             return true
         end
 
-        if lig >= 1 and col >= 1 and col < Map.width and lig < Map.height then
+        if lig >= 1 and col >= 1 and col <= Map.width and lig <= Map.height then
             -- Regarde si il y a une tuile solide a cette position
             for lay = 1, Map.nLayers, 1 do
                 if jsonMap.layers[lay].type == "tilelayer" then -- Si la layer est de type tile
@@ -197,31 +170,38 @@ MapManager.create = function (pTiledJson,pTileDict)
         return false
     end
 
-
     Map.Update = function (dt)
         
     end
+    Map.Draw = function (pCameraX,pCameraY,pViewWidth,pViewHeight)
 
+        local startC = math.floor(pCameraX/TILE_SIZE)
+        local startL = math.floor(pCameraY/TILE_SIZE)
 
-    Map.Draw = function ()
-        for l = 1, Map.height, 1 do
-            for c = 1, Map.width, 1 do
+        local widthC = math.floor(pViewWidth/TILE_SIZE)+2
+        local widthL = math.floor(pViewHeight/TILE_SIZE)+2
+
+        for l = startL, startL + widthL, 1 do
+            for c = startC, startC + widthC, 1 do
                 
                 for lay = 1, Map.nLayers, 1 do
                     if jsonMap.layers[lay].type == "tilelayer" then
 
-                        -- Affiche la tuile
-                        local tile = Map.grid[l][c][lay]
-                        if Map.getTilePropertie("isVisible",tile) ~= false then
+                        if l >= 1 and c >= 1 and l <= Map.height and c <= Map.width then
+                            -- Affiche la tuile
+                            local tile = Map.grid[l][c][lay]
+                            if Map.getTilePropertie("isVisible",tile) ~= false then
 
-                            if tile.id ~= -1 then
-                                local imgSheet = dict[tile.tilesheet].img
+                                if tile.id ~= -1 then
+                                    local imgSheet = dict[tile.tilesheet].img
 
-                                local pos = getPositionInTileset(tile.id,imgSheet:getWidth()/TILE_SIZE)
-                                local quad = love.graphics.newQuad((pos.col-1)*TILE_SIZE ,(pos.lig-1)*TILE_SIZE ,TILE_SIZE,TILE_SIZE,imgSheet:getWidth(),imgSheet:getHeight())
-                                love.graphics.draw(imgSheet,quad,(c-1)*TILE_SIZE,(l-1)*TILE_SIZE)
+                                    local pos = getPositionInTileset(tile.id,imgSheet:getWidth()/TILE_SIZE)
+                                    local quad = love.graphics.newQuad((pos.col-1)*TILE_SIZE ,(pos.lig-1)*TILE_SIZE ,TILE_SIZE,TILE_SIZE,imgSheet:getWidth(),imgSheet:getHeight())
+                                    love.graphics.draw(imgSheet,quad,(c-1)*TILE_SIZE,(l-1)*TILE_SIZE)
+                                end
                             end
                         end
+
                     end
                 end
             end

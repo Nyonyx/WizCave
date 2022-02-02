@@ -28,6 +28,24 @@
                 }]
         }, 
         {
+         "id":9,
+         "properties":[
+                {
+                 "name":"damagePlayer",
+                 "type":"bool",
+                 "value":true
+                }]
+        }, 
+        {
+         "id":30,
+         "properties":[
+                {
+                 "name":"isSolid",
+                 "type":"bool",
+                 "value":true
+                }]
+        }, 
+        {
          "id":69,
          "properties":[
                 {
@@ -138,6 +156,15 @@
                  "name":"isSolid",
                  "type":"bool",
                  "value":true
+                }]
+        }, 
+        {
+         "id":128,
+         "properties":[
+                {
+                 "name":"type",
+                 "type":"string",
+                 "value":"Platform"
                 }]
         }],
  "tilewidth":16,

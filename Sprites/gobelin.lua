@@ -1,6 +1,6 @@
-local spriteManager = require("sprite")
+local spriteManager = require("Sprites.sprite")
 local gobelinImg = love.graphics.newImage("Images/gobelin.png")
-
+local util = require("util")
 -- TODO :  deplacer ces fonctions dans un fichier commun
 --         pour eviter la duplication de code
 local function AlignOnLine(pSprite)
@@ -47,6 +47,7 @@ local map = nil -- map reference
 local player = nil -- player reference
 
 gobelinManager.init = function (pMap,pPlayer)
+    gobelinManager.lst_gobelin = {}
     map = pMap
     player = pPlayer
 end
@@ -59,6 +60,15 @@ gobelinManager.newGobelin = function (pX,pY)
 
     gobelin.state = "PATROL" -- State Machine AI
 
+
+
+    -- apellé quand il recoit des dommages
+    gobelin.damage = function ()
+        gobelin.supprime = true
+        util.removeSprite(gobelin,gobelinManager.lst_gobelin)
+    end
+
+    
     gobelin.Update = function (dt)
 
 

@@ -1,5 +1,10 @@
 local spriteManager = {}
 spriteManager.lst_sprites = {}
+
+spriteManager.init = function ()
+	spriteManager.lst_sprites = {}
+end
+
 spriteManager.newSprite = function (pX,pY)
     local sprite = {}
     sprite.x = pX

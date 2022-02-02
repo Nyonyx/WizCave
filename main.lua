@@ -1,3 +1,5 @@
+
+local util = require "util"
 io.stdout:setvbuf('no')                               -- Affiche trace console
 love.graphics.setDefaultFilter("nearest")             -- Pixel art
 love.window.setMode(1600,1000)                                      
@@ -9,26 +11,34 @@ end
 local json = require("./libs/json")
 local Util = require("util")
 local mapManager = require("map")
-local playerManager = require("player")
-local slimeManager = require("slime")
-local gobelinManager = require("gobelin")
-local spriteManager = require("sprite")
-
-local cartManager = require("minecart")
+local playerManager = require("Sprites.player")
+local slimeManager = require("Sprites.slime")
+local gobelinManager = require("Sprites.gobelin")
+local spriteManager = require("Sprites.sprite")
+local bulletManager = require("Sprites.bullet")
+local batManager = require("Sprites.bat")
+local platformManager = require("Sprites.platforms")
 
 local player = {}
 local camera = {}
 local currentMap = {}
 
-
+-- TODO : notter tout les proprietes interfaces
+-- Noter toutes les proprietes objets Tiled
 
 --------------- Globals ------------
-DEBUG = true
+DEBUG = false
 TILE_SIZE = 16
 GRAVITY = 0.13
 CAMERA_SCALING = 5
+FIRSTMAP = "Temple.json"
+
 LARGEUR_ECRAN = love.graphics.getWidth()
 HAUTEUR_ECRAN = love.graphics.getHeight()
+
+if DEBUG then
+  FIRSTMAP = "Surface.json"
+end
 -----------------------------------
 
 local function loadTilesProperties(file)
@@ -60,18 +70,28 @@ tilesetsDict["tileset.json"].img = love.graphics.newImage("Images/tilesetDungeon
 
 function love.load()
   print("--------------DEBUT-------------------")
+  LoadLevel(FIRSTMAP)
+end
 
+function LoadLevel(pLevelName)
+  spriteManager.init()
+  platformManager.init()
   --------- Chargement du jeu
-  currentMap = mapManager.create(love.filesystem.read("Maps/map1.json"),tilesetsDict)
+  currentMap = mapManager.create(love.filesystem.read("Maps/"..pLevelName),tilesetsDict,pLevelName)
 
   
-  player = playerManager.newPlayer(22,200)
+  player = playerManager.newPlayer(currentMap.playerSpawn.x,currentMap.playerSpawn.y)
   camera = {x = 0, y = 0}
-  ---------------
 
   playerManager.init(currentMap)
   slimeManager.init(currentMap,player)
   gobelinManager.init(currentMap,player)
+  bulletManager.init(currentMap)
+  batManager.init(currentMap,player)
+  
+  
+  ---------------
+
 
 end
 
@@ -104,7 +124,22 @@ function love.update(dt)
   currentMap.Update(dt)
 
   spriteManager.updateAll(dt)
-  --player.Update(dt,currentMap)
+  
+  -- check player Map changes
+  local x1 = player.x + player.collideBox.x
+  local y1 = player.y + player.collideBox.y
+  local w1 = player.collideBox.w
+  local h1 = player.collideBox.h
+
+  local x2 = currentMap.endMap.x
+  local y2 = currentMap.endMap.y
+  local w2 = currentMap.endMap.w
+  local h2 = currentMap.endMap.h
+  if util.collide(x1,y1,w1,h1,x2,y2,w2,h2) then
+    -- Change Map
+    LoadLevel(currentMap.endMap.Next_Map)
+  end
+
   update_camera(dt)
 end
 
@@ -114,14 +149,14 @@ function love.draw()
   local mC = math.floor(Util.screenToworldCoords(love.mouse.getX(),camera.x)/TILE_SIZE)+1
   local mL = math.floor(Util.screenToworldCoords(love.mouse.getY(),camera.y)/TILE_SIZE)+1
 
-  love.graphics.setColor(0.1,0.1,0.2,1)
+  love.graphics.setColor(0,0,0,1)
   love.graphics.rectangle("fill",0,0,LARGEUR_ECRAN,HAUTEUR_ECRAN)
   love.graphics.setColor(1,1,1,1)
   love.graphics.push()
   love.graphics.scale(CAMERA_SCALING,CAMERA_SCALING)
   love.graphics.translate(-camera.x,-camera.y)
 
-  currentMap.Draw()
+  currentMap.Draw(camera.x,camera.y,LARGEUR_ECRAN/CAMERA_SCALING,HAUTEUR_ECRAN/CAMERA_SCALING)
   player.Draw()
   spriteManager.drawAll()
 
@@ -156,6 +191,7 @@ function love.draw()
     love.graphics.print("x "..player.x,0,16)
     love.graphics.print("y "..player.y,0,32)
     love.graphics.print("life "..player.life,0,48)
+    love.graphics.print("FPS "..love.timer.getFPS(),0,64)
   end
   -----------------------------------------
 

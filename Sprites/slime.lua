@@ -1,4 +1,4 @@
-local spriteManager = require("sprite")
+local spriteManager = require("Sprites.sprite")
 local slimeImg = love.graphics.newImage("Images/slime.png")
 local util = require("util")
 -- TODO : deplacer les fonctions AlignOnline et collide_with_map
@@ -49,6 +49,7 @@ local map = nil -- map reference
 local player = nil -- player reference
 
 slimeManager.init = function (pMap,pPlayer)
+    slimeManager.lst_slime = {}
     map = pMap
     player = pPlayer
 end
@@ -58,6 +59,16 @@ slimeManager.newSlime = function (pX,pY)
     slime.collideBox = {x=2,y=7,w=13,h=9}
     slime.timerJump = math.random(2)
     slime.is_Grounded = false
+
+
+    slime.is_Damage = true -- donne des degats au joueur
+
+    -- apellé quand il recoit des dommages
+    slime.damage = function ()
+        slime.supprime = true
+        util.removeSprite(slime,slimeManager.lst_slime)
+    end
+
     slime.jump = function (pDir)
         if slime.is_Grounded then
             slime.is_Grounded = false

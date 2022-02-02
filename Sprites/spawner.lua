@@ -1,6 +1,6 @@
-local spriteManager = require("sprite")
+local spriteManager = require("Sprites.sprite")
 
-local mineCartManager = require("minecart")
+local mineCartManager = require("Sprites.minecart")
 
 
 local spawnerManager = {}
