@@ -18,6 +18,8 @@ local spriteManager = require("Sprites.sprite")
 local bulletManager = require("Sprites.bullet")
 local batManager = require("Sprites.bat")
 local platformManager = require("Sprites.platforms")
+local spikeManager = require("Sprites.spike")
+
 
 local player = {}
 local camera = {}
@@ -37,7 +39,7 @@ LARGEUR_ECRAN = love.graphics.getWidth()
 HAUTEUR_ECRAN = love.graphics.getHeight()
 
 if DEBUG then
-  FIRSTMAP = "Surface.json"
+  FIRSTMAP = "EntreeGrotte.json"
 end
 -----------------------------------
 
@@ -64,10 +66,6 @@ tilesetsDict["tileset.json"].img = love.graphics.newImage("Images/tilesetDungeon
 
 
 
-
-
-
-
 function love.load()
   print("--------------DEBUT-------------------")
   LoadLevel(FIRSTMAP)
@@ -88,6 +86,8 @@ function LoadLevel(pLevelName)
   gobelinManager.init(currentMap,player)
   bulletManager.init(currentMap)
   batManager.init(currentMap,player)
+  spikeManager.init(player)
+  
   
   
   ---------------
@@ -153,17 +153,19 @@ function love.draw()
   love.graphics.rectangle("fill",0,0,LARGEUR_ECRAN,HAUTEUR_ECRAN)
   love.graphics.setColor(1,1,1,1)
   love.graphics.push()
-  love.graphics.scale(CAMERA_SCALING,CAMERA_SCALING)
-  love.graphics.translate(-camera.x,-camera.y)
+    love.graphics.scale(CAMERA_SCALING,CAMERA_SCALING)
+    love.graphics.translate(-camera.x,-camera.y)
 
-  currentMap.Draw(camera.x,camera.y,LARGEUR_ECRAN/CAMERA_SCALING,HAUTEUR_ECRAN/CAMERA_SCALING)
-  player.Draw()
-  spriteManager.drawAll()
+    currentMap.Draw(camera.x,camera.y,LARGEUR_ECRAN/CAMERA_SCALING,HAUTEUR_ECRAN/CAMERA_SCALING)
+    player.Draw()
+    spriteManager.drawAll()
 
+    if DEBUG then
+      love.graphics.setColor(1,1,1,0.3)
+      love.graphics.rectangle("fill",(mC-1)*TILE_SIZE,(mL-1)*TILE_SIZE,TILE_SIZE,TILE_SIZE)
+      love.graphics.setColor(1,1,1,1)
+    end
 
-  love.graphics.setColor(1,1,1,0.3)
-  love.graphics.rectangle("fill",(mC-1)*TILE_SIZE,(mL-1)*TILE_SIZE,TILE_SIZE,TILE_SIZE)
-  love.graphics.setColor(1,1,1,1)
   love.graphics.pop()
 
   -------------- Draw Debug UI ------------
@@ -194,6 +196,20 @@ function love.draw()
     love.graphics.print("FPS "..love.timer.getFPS(),0,64)
   end
   -----------------------------------------
+
+
+  -- Draw UI
+
+  -- Life Bar
+  love.graphics.setColor(1,0,0,1)
+  love.graphics.rectangle("fill",0,0, 300 * (player.life/player.maxLife) ,32)
+  love.graphics.setColor(1,1,1,1)
+
+  -- Mana Bar
+
+  love.graphics.setColor(0,0,1,1)
+  love.graphics.rectangle("fill",0,34, 300 * (player.mana/player.maxMana) ,32)
+  love.graphics.setColor(1,1,1,1)
 
 end
 

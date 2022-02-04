@@ -27,6 +27,7 @@ spriteManager.updateAll = function (dt)
 	-- Purge des sprites
 	for i = #spriteManager.lst_sprites, 1, -1 do
 		local sprite = spriteManager.lst_sprites[i]
+		
 		if sprite.supprime then
 			table.remove(spriteManager.lst_sprites,i)
 		end

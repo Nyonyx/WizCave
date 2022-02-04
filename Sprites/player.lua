@@ -4,7 +4,7 @@ local platformManager = require("Sprites.platforms") -- pour detecter les colisi
 local bulletManager = require("Sprites.bullet") -- pour tirer bullet
 local util = require("util")
 
-local playerImg = love.graphics.newImage("Images/Character.png")
+local playerImg = love.graphics.newImage("Images/player.png")
 local playerManager = {}
 playerManager.map = nil
 
@@ -51,7 +51,12 @@ playerManager.init = function (pMap)
     playerManager.map = pMap
 end
 
-
+local changeAnim = function (player,pNewAnim)
+    if pNewAnim ~= player.currentAnim then
+        player.animFrame = 1
+        player.currentAnim = pNewAnim
+    end
+end
 
 playerManager.newPlayer = function(pX,pY)
     local player = spriteManager.newSprite(pX,pY)
@@ -59,10 +64,39 @@ playerManager.newPlayer = function(pX,pY)
     player.is_Grounded = false
     player.platformUnder = nil
     player.isFlip = false
-    player.life = 10
+    player.maxLife = 10
+    player.life = player.maxLife
+    player.maxMana = 10
+    player.mana = player.maxMana
     player.damageTimer = 0.5
     player.is_Damage = false
     player.state = "WALK" -- State Machine
+
+    player.animations = {}
+    player.animations["WALK"] = {}
+    table.insert(player.animations["WALK"],love.graphics.newQuad(0,32,32,32,playerImg:getWidth(),playerImg:getHeight()))
+    table.insert(player.animations["WALK"],love.graphics.newQuad(32,32,32,32,playerImg:getWidth(),playerImg:getHeight()))
+    table.insert(player.animations["WALK"],love.graphics.newQuad(64,32,32,32,playerImg:getWidth(),playerImg:getHeight()))
+    table.insert(player.animations["WALK"],love.graphics.newQuad(96,32,32,32,playerImg:getWidth(),playerImg:getHeight()))
+    table.insert(player.animations["WALK"],love.graphics.newQuad(128,32,32,32,playerImg:getWidth(),playerImg:getHeight()))
+    table.insert(player.animations["WALK"],love.graphics.newQuad(160,32,32,32,playerImg:getWidth(),playerImg:getHeight()))
+    table.insert(player.animations["WALK"],love.graphics.newQuad(192,32,32,32,playerImg:getWidth(),playerImg:getHeight()))
+    table.insert(player.animations["WALK"],love.graphics.newQuad(224,32,32,32,playerImg:getWidth(),playerImg:getHeight()))
+    
+    player.animations["ATTACK"] = {}
+    table.insert(player.animations["ATTACK"],love.graphics.newQuad(0,96,32,32,playerImg:getWidth(),playerImg:getHeight()))
+    table.insert(player.animations["ATTACK"],love.graphics.newQuad(32,96,32,32,playerImg:getWidth(),playerImg:getHeight()))
+    table.insert(player.animations["ATTACK"],love.graphics.newQuad(64,96,32,32,playerImg:getWidth(),playerImg:getHeight()))
+    table.insert(player.animations["ATTACK"],love.graphics.newQuad(96,96,32,32,playerImg:getWidth(),playerImg:getHeight()))
+    table.insert(player.animations["ATTACK"],love.graphics.newQuad(128,96,32,32,playerImg:getWidth(),playerImg:getHeight()))
+
+    player.animations["JUMP"] = {}
+    table.insert(player.animations["JUMP"],love.graphics.newQuad(0,64,32,32,playerImg:getWidth(),playerImg:getHeight()))
+
+
+    player.currentAnim = "WALK"
+    
+    player.animFrame = 1
 
     player.hitbox = {x = 0,y = 0,h = 0,w = 0} -- boite attaque corp a corps
     player.attackTimer = 0.3 -- attack timeout
@@ -87,6 +121,11 @@ playerManager.newPlayer = function(pX,pY)
 
 
     player.Update = function (dt)
+        player.animFrame = player.animFrame + (dt*10)
+        if player.animFrame >= #player.animations[player.currentAnim]+1 then
+            player.animFrame = 1
+        end
+
         if player.is_Damage then
             player.damageTimer = player.damageTimer - dt
             if player.damageTimer < 0 then
@@ -98,53 +137,73 @@ playerManager.newPlayer = function(pX,pY)
         -- Attack corp a corp
         if love.keyboard.isDown("x") then
             player.state = "ATTACK"
+            changeAnim(player,"ATTACK")
         end
 
         -- shoot bullet
         if love.keyboard.isDown("c") then
-            if player.state ~= "SHOOT" then
+            if player.mana > 0 then
+                if player.state ~= "SHOOT" then
 
 
 
-                local bullet = nil
-                if player.isFlip then
-                    bullet = bulletManager.newBullet(player.x+8,player.y+8)
-                    bullet.vx = -2
-                else
-                    bullet = bulletManager.newBullet(player.x+8,player.y+8)
-                    bullet.vx = 2
+                    local bullet = nil
+                    if player.isFlip then
+                        bullet = bulletManager.newBullet(player.x+8,player.y+8)
+                        bullet.vx = -2
+                    else
+                        bullet = bulletManager.newBullet(player.x+8,player.y+8)
+                        bullet.vx = 2
+                    end
+
+                    player.state = "SHOOT"
+                    player.mana = player.mana - 1
                 end
 
-                player.state = "SHOOT"
             end
         end
 
-
+        
         if player.state == "WALK" then
             player.vx = 0
             if love.keyboard.isDown("right") then
+                if player.is_Grounded then
+                    changeAnim(player,"WALK")
+                end
                 player.vx = 1.7
                 player.isFlip = false
-            end
-            if love.keyboard.isDown("left") then
+            elseif love.keyboard.isDown("left") then
+                if player.is_Grounded then
+                    changeAnim(player,"WALK")
+                end
                 player.vx = -1.7
                 player.isFlip = true
+
+            else
+                --changeAnim(player,"IDLE")
             end
             if love.keyboard.isDown("space") then
                 if player.is_Grounded then
                     player.platformUnder = nil
                     player.vy = -3
                     player.is_Grounded = false
+                    changeAnim(player,"JUMP")
                 end
+            else
+                
             end
 
         -- Melee Attack
         elseif player.state == "ATTACK" then
+            
+            
             player.vx = 0
             player.attackTimer = player.attackTimer - dt
             if player.attackTimer < 0 then
-                player.attackTimer = 0.3
-                player.state = "WALK"
+                if player.animFrame == 1 then
+                    player.attackTimer = 0.3
+                    player.state = "WALK"
+                end
             end
 
             if player.isFlip then
@@ -179,6 +238,7 @@ playerManager.newPlayer = function(pX,pY)
             if player.attackTimer < 0 then
                 player.attackTimer = 0.3
                 player.state = "WALK"
+
             end
     
 
@@ -312,10 +372,12 @@ playerManager.newPlayer = function(pX,pY)
             if player.is_Damage then
                 love.graphics.setColor(1,0,0)
             end
+            local quad = player.animations[player.currentAnim][math.floor(player.animFrame)]
             if player.isFlip then
-                love.graphics.draw(playerImg,player.x + 32,player.y,0,-1,1)
+                
+                love.graphics.draw(playerImg,quad,player.x + 32,player.y,0,-1,1)
             else
-                love.graphics.draw(playerImg,player.x,player.y,0,1,1)
+                love.graphics.draw(playerImg,quad,player.x,player.y,0,1,1)
             end
             love.graphics.setColor(1,1,1,1)
             

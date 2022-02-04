@@ -11,6 +11,7 @@ local slimeManager = require("Sprites.slime")
 local gobelinManager = require("Sprites.gobelin")
 local SpawnerManager = require("Sprites.spawner")
 local batManager = require("Sprites.bat")
+local spikeManager = require("Sprites.spike")
 
 local json = require("./libs/json")
 
@@ -123,6 +124,8 @@ MapManager.create = function (pTiledJson,pTileDict,pName)
                     gobelinManager.newGobelin(obj.x,obj.y-16)
                 elseif obj.type == "Spawner" then
                     SpawnerManager.newSpawner(obj.x,obj.y,props.object)
+                elseif obj.type == "Spike" then
+                    spikeManager.newSpike(obj.x,obj.y)
                 end
             end
         end
