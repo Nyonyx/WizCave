@@ -1,8 +1,9 @@
 local spriteManager = {}
 spriteManager.lst_sprites = {}
 
-spriteManager.init = function ()
+spriteManager.init = function (pPlayer)
 	spriteManager.lst_sprites = {}
+	table.insert(spriteManager.lst_sprites,pPlayer)
 end
 
 spriteManager.newSprite = function (pX,pY)

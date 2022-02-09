@@ -84,7 +84,13 @@ playerManager.newPlayer = function(pX,pY)
     
     animation_system.startAnimation(player,"IDLE")
     player.respawn = function ()
+        -- Reload the level
         LoadLevel(playerManager.map.name)
+
+        
+        player.state = "WALK"
+        player.life = player.maxLife
+        player.mana = player.maxMana
     end
 
 
@@ -116,11 +122,6 @@ playerManager.newPlayer = function(pX,pY)
         if love.keyboard.isDown("x") then
             animation_system.startAnimation(player,"ATTACK")
             player.state = "ATTACK"
-            if player.isFlip then
-                player.x = player.x - 2
-            else
-                player.x = player.x + 2
-            end
         end
 
         -- shoot bullet

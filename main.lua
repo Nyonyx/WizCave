@@ -1,5 +1,4 @@
 
-local util = require "util"
 io.stdout:setvbuf('no')                               -- Affiche trace console
 love.graphics.setDefaultFilter("nearest")             -- Pixel art
 love.window.setMode(1600,1000)                                      
@@ -8,6 +7,7 @@ if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then -- Debuggeur
 end
 ---------------------------------------------------------------
 
+local util = require "util"
 local json = require("./libs/json")
 local Util = require("util")
 local mapManager = require("map")
@@ -30,7 +30,7 @@ local currentMap = {}
 
 --------------- Globals ------------
 DEBUG = false
-DEBUG_INFINITE_LIFE = true
+DEBUG_INFINITE_LIFE = false
 DEBUG_STATE = false
 DRAW_COLLIDER_BOXES = false
 TILE_SIZE = 16
@@ -69,28 +69,37 @@ tilesetsDict["tileset.json"].img = love.graphics.newImage("Images/tilesetDungeon
 
 function love.load()
   print("--------------DEBUT-------------------")
+
+  -- Creation du joueur
+  player = playerManager.newPlayer(0,0)
+  if DEBUG_INFINITE_LIFE then player.maxLife = 1000; player.life = 1000 end
+
+
+  --- Chargement du niveau
   LoadLevel(FIRSTMAP)
 end
 
 function LoadLevel(pLevelName)
-  spriteManager.init()
+  spriteManager.init(player)
   platformManager.init()
-  --------- Chargement du jeu
-  currentMap = mapManager.create(love.filesystem.read("Maps/"..pLevelName),tilesetsDict,pLevelName)
-
-  
-  player = playerManager.newPlayer(currentMap.playerSpawn.x,currentMap.playerSpawn.y)
-  if DEBUG_INFINITE_LIFE then player.maxLife = 1000; player.life = 1000 end
-
-  camera = {x = 0, y = 0}
-
   playerManager.init(currentMap)
   slimeManager.init(currentMap,player)
   gobelinManager.init(currentMap,player)
   bulletManager.init(currentMap)
   batManager.init(currentMap,player)
   spikeManager.init(player)
-  
+
+
+  --------- Chargement de la map ------------------
+  currentMap = mapManager.create(love.filesystem.read("Maps/"..pLevelName),tilesetsDict,pLevelName)
+  --------------------------------------------------
+
+  -- Positionne Joueur
+  player.x = currentMap.playerSpawn.x
+  player.y = currentMap.playerSpawn.y
+  --
+  camera = {x = 0, y = 0}
+
   
   
   ---------------
