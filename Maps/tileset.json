@@ -37,6 +37,15 @@
                 }]
         }, 
         {
+         "id":12,
+         "properties":[
+                {
+                 "name":"isSolid",
+                 "type":"bool",
+                 "value":true
+                }]
+        }, 
+        {
          "id":30,
          "properties":[
                 {

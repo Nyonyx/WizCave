@@ -1,5 +1,6 @@
 local spriteManager = require("Sprites.sprite")
-local batImg = love.graphics.newImage("Images/ennemy_bat.png")
+local anim_system = require("animation_system")
+local batImg = love.graphics.newImage("Images/bat.png")
 local util = require("util")
 
 local batManager = {}
@@ -63,7 +64,9 @@ batManager.newBat = function (pX,pY)
     bat.collideBox = {x = 4,y = 4,w = 8,h = 8}
     bat.speed = 1
     bat.excitedTimer = 0
-
+    anim_system.initAnimSystem(bat,batImg,16,16)
+    anim_system.addAnim(bat,"FLY",{0,1,2,3},3,true)
+    anim_system.startAnimation(bat,"FLY")
     bat.state= "FLY"
 
     bat.damage = function ()
@@ -72,7 +75,7 @@ batManager.newBat = function (pX,pY)
     end
 
     bat.Update = function (dt)
-
+        anim_system.updateAnim(bat,dt)
         if util.dist(bat.x+8,bat.y+8,player.x+16,player.y+16) < 200 then
 
             if bat.state == "FLY" then
@@ -81,7 +84,7 @@ batManager.newBat = function (pX,pY)
                 local angle = util.angle(player.x + 16,player.y + 16,bat.x + 8,bat.y + 8)
                 bat.directionTimer = bat.directionTimer - dt
                 if bat.directionTimer < 0 then
-                    bat.directionTimer = math.random(0.3,1)
+                    bat.directionTimer = math.random(0.2,0.6)
                     bat.offset = math.random((-math.pi/4) ,math.pi/4)
 
                     bat.vx = -bat.speed*math.cos(angle + bat.offset)
@@ -140,10 +143,11 @@ batManager.newBat = function (pX,pY)
     end
 
     bat.Draw = function ()
-        local quad = love.graphics.newQuad(0,2*TILE_SIZE,TILE_SIZE,TILE_SIZE,batImg:getWidth(),batImg:getHeight())
-        love.graphics.draw(batImg,quad,bat.x,bat.y)
-        --love.graphics.circle("fill",bat.x + 8,bat.y + 8,4)
-
+        if bat.vx > 0 then
+            anim_system.drawAnim(bat,true)
+        else
+            anim_system.drawAnim(bat,false)
+        end
     end
 
     table.insert(batManager.lst_bat,bat)

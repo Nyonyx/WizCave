@@ -2,6 +2,9 @@ local spriteManager = require("Sprites.sprite")
 
 local platformManager = require("Sprites.platforms") -- pour detecter les colisions avec les plateformes
 local bulletManager = require("Sprites.bullet") -- pour tirer bullet
+
+local animation_system = require("animation_system")
+
 local util = require("util")
 
 local playerImg = love.graphics.newImage("Images/player.png")
@@ -13,36 +16,38 @@ local function AlignOnLine(pSprite)
     pSprite.y = (lig-1)*TILE_SIZE
 end
 
-local function AlignOnColumn(pSprite)
-    local col = math.floor((pSprite.x + (TILE_SIZE/2) )/TILE_SIZE) + 1
-    pSprite.x = (col-1)*TILE_SIZE
-end
+--local function AlignOnColumn(pSprite)
+--    local col = math.floor((pSprite.x + (TILE_SIZE/2) )/TILE_SIZE) + 1
+--    pSprite.x = (col-1)*TILE_SIZE
+--end
 
 -- Detection des collisions avec la map
 local function collide_with_map(pPlayer,pMap)
+    -- Test Collisions Verticales
 	if pPlayer.vy > 0 then
 		if spriteManager.collide_map(pPlayer,"down",pMap) then
 			pPlayer.vy = 0
-            AlignOnLine(pPlayer)
+            --AlignOnLine(pPlayer)
             pPlayer.is_Grounded = true
 		end
 	elseif pPlayer.vy < 0 then
 		if spriteManager.collide_map(pPlayer,"up",pMap) then
 			pPlayer.vy = 0	
-            AlignOnLine(pPlayer)	
+            --AlignOnLine(pPlayer)	
 		end
 	end
+    -- Test Collisions Horizontales
 	if pPlayer.vx > 0 then
 		if spriteManager.collide_map(pPlayer,"right",pMap) then
 			pPlayer.vx = 0	
-            AlignOnColumn(pPlayer)	
-            pPlayer.x = pPlayer.x - 8
+            --AlignOnColumn(pPlayer)	
+            --pPlayer.x = pPlayer.x - 1
 		end
 	elseif pPlayer.vx < 0 then
 		if spriteManager.collide_map(pPlayer,"left",pMap) then
 			pPlayer.vx = 0	
-            AlignOnColumn(pPlayer)		
-            pPlayer.x = pPlayer.x + 8 
+            --AlignOnColumn(pPlayer)		
+            --pPlayer.x = pPlayer.x + 1
 		end
 	end
 end
@@ -51,12 +56,6 @@ playerManager.init = function (pMap)
     playerManager.map = pMap
 end
 
-local changeAnim = function (player,pNewAnim)
-    if pNewAnim ~= player.currentAnim then
-        player.animFrame = 1
-        player.currentAnim = pNewAnim
-    end
-end
 
 playerManager.newPlayer = function(pX,pY)
     local player = spriteManager.newSprite(pX,pY)
@@ -64,43 +63,26 @@ playerManager.newPlayer = function(pX,pY)
     player.is_Grounded = false
     player.platformUnder = nil
     player.isFlip = false
-    player.maxLife = 10
+    player.maxLife = 5
     player.life = player.maxLife
-    player.maxMana = 10
+    player.maxMana = 5
     player.mana = player.maxMana
     player.damageTimer = 0.5
     player.is_Damage = false
     player.state = "WALK" -- State Machine
 
-    player.animations = {}
-    player.animations["WALK"] = {}
-    table.insert(player.animations["WALK"],love.graphics.newQuad(0,32,32,32,playerImg:getWidth(),playerImg:getHeight()))
-    table.insert(player.animations["WALK"],love.graphics.newQuad(32,32,32,32,playerImg:getWidth(),playerImg:getHeight()))
-    table.insert(player.animations["WALK"],love.graphics.newQuad(64,32,32,32,playerImg:getWidth(),playerImg:getHeight()))
-    table.insert(player.animations["WALK"],love.graphics.newQuad(96,32,32,32,playerImg:getWidth(),playerImg:getHeight()))
-    table.insert(player.animations["WALK"],love.graphics.newQuad(128,32,32,32,playerImg:getWidth(),playerImg:getHeight()))
-    table.insert(player.animations["WALK"],love.graphics.newQuad(160,32,32,32,playerImg:getWidth(),playerImg:getHeight()))
-    table.insert(player.animations["WALK"],love.graphics.newQuad(192,32,32,32,playerImg:getWidth(),playerImg:getHeight()))
-    table.insert(player.animations["WALK"],love.graphics.newQuad(224,32,32,32,playerImg:getWidth(),playerImg:getHeight()))
-    
-    player.animations["ATTACK"] = {}
-    table.insert(player.animations["ATTACK"],love.graphics.newQuad(0,96,32,32,playerImg:getWidth(),playerImg:getHeight()))
-    table.insert(player.animations["ATTACK"],love.graphics.newQuad(32,96,32,32,playerImg:getWidth(),playerImg:getHeight()))
-    table.insert(player.animations["ATTACK"],love.graphics.newQuad(64,96,32,32,playerImg:getWidth(),playerImg:getHeight()))
-    table.insert(player.animations["ATTACK"],love.graphics.newQuad(96,96,32,32,playerImg:getWidth(),playerImg:getHeight()))
-    table.insert(player.animations["ATTACK"],love.graphics.newQuad(128,96,32,32,playerImg:getWidth(),playerImg:getHeight()))
-
-    player.animations["JUMP"] = {}
-    table.insert(player.animations["JUMP"],love.graphics.newQuad(0,64,32,32,playerImg:getWidth(),playerImg:getHeight()))
-
-
-    player.currentAnim = "WALK"
-    
-    player.animFrame = 1
 
     player.hitbox = {x = 0,y = 0,h = 0,w = 0} -- boite attaque corp a corps
-    player.attackTimer = 0.3 -- attack timeout
+    player.attackTimer = 0.5 -- attack timeout
 
+    -- Add animation system to player
+    animation_system.initAnimSystem(player,playerImg,32,32)
+    animation_system.addAnim(player,"WALK",{8,9,10,11,12,13,14,15},10,true)
+    animation_system.addAnim(player,"ATTACK",{25,26,27,28},12,false)
+    animation_system.addAnim(player,"IDLE",{0,1},4,true)
+    animation_system.addAnim(player,"JUMP",{16},1,true)
+    
+    animation_system.startAnimation(player,"IDLE")
     player.respawn = function ()
         LoadLevel(playerManager.map.name)
     end
@@ -121,11 +103,7 @@ playerManager.newPlayer = function(pX,pY)
 
 
     player.Update = function (dt)
-        player.animFrame = player.animFrame + (dt*10)
-        if player.animFrame >= #player.animations[player.currentAnim]+1 then
-            player.animFrame = 1
-        end
-
+        animation_system.updateAnim(player,dt)
         if player.is_Damage then
             player.damageTimer = player.damageTimer - dt
             if player.damageTimer < 0 then
@@ -136,8 +114,13 @@ playerManager.newPlayer = function(pX,pY)
 
         -- Attack corp a corp
         if love.keyboard.isDown("x") then
+            animation_system.startAnimation(player,"ATTACK")
             player.state = "ATTACK"
-            changeAnim(player,"ATTACK")
+            if player.isFlip then
+                player.x = player.x - 2
+            else
+                player.x = player.x + 2
+            end
         end
 
         -- shoot bullet
@@ -166,28 +149,34 @@ playerManager.newPlayer = function(pX,pY)
         
         if player.state == "WALK" then
             player.vx = 0
+
             if love.keyboard.isDown("right") then
                 if player.is_Grounded then
-                    changeAnim(player,"WALK")
+                    animation_system.startAnimation(player,"WALK")
                 end
                 player.vx = 1.7
                 player.isFlip = false
             elseif love.keyboard.isDown("left") then
                 if player.is_Grounded then
-                    changeAnim(player,"WALK")
+                    animation_system.startAnimation(player,"WALK")
                 end
                 player.vx = -1.7
                 player.isFlip = true
 
             else
-                --changeAnim(player,"IDLE")
+                if player.is_Grounded then
+                    animation_system.startAnimation(player,"IDLE")
+                end
             end
+
+
+
             if love.keyboard.isDown("space") then
                 if player.is_Grounded then
                     player.platformUnder = nil
                     player.vy = -3
                     player.is_Grounded = false
-                    changeAnim(player,"JUMP")
+                    animation_system.startAnimation(player,"JUMP")
                 end
             else
                 
@@ -200,10 +189,10 @@ playerManager.newPlayer = function(pX,pY)
             player.vx = 0
             player.attackTimer = player.attackTimer - dt
             if player.attackTimer < 0 then
-                if player.animFrame == 1 then
-                    player.attackTimer = 0.3
-                    player.state = "WALK"
-                end
+            
+                player.attackTimer = 0.5
+                player.state = "WALK"
+             
             end
 
             if player.isFlip then
@@ -298,12 +287,13 @@ playerManager.newPlayer = function(pX,pY)
 
 
 
-        player.vy = player.vy + GRAVITY
 
+        player.vy = player.vy + GRAVITY
+        collide_with_map(player,playerManager.map)
         player.x = player.x + player.vx
         player.y = player.y + player.vy
 
-        collide_with_map(player,playerManager.map)
+        
 
         -- check Collisions avec plateformes fixes
         local tile = playerManager.map.getTileAt(player.x+16,player.y+32,1)
@@ -372,13 +362,16 @@ playerManager.newPlayer = function(pX,pY)
             if player.is_Damage then
                 love.graphics.setColor(1,0,0)
             end
-            local quad = player.animations[player.currentAnim][math.floor(player.animFrame)]
+         
             if player.isFlip then
-                
-                love.graphics.draw(playerImg,quad,player.x + 32,player.y,0,-1,1)
+                animation_system.drawAnim(player,true)
             else
-                love.graphics.draw(playerImg,quad,player.x,player.y,0,1,1)
+                animation_system.drawAnim(player)
             end
+
+
+
+
             love.graphics.setColor(1,1,1,1)
             
             if DEBUG and player.state == "ATTACK" then

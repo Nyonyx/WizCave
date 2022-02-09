@@ -5,20 +5,24 @@ local mineCartManager = require("Sprites.minecart")
 
 local spawnerManager = {}
 spawnerManager.lst_spawners = {}
-spawnerManager.newSpawner = function (pX,pY,pType)
+spawnerManager.newSpawner = function (pX,pY,pType,pObjvx,pObjvy)
     local spawner = spriteManager.newSprite(pX,pY)
+    spawner.objVx = pObjvx
+    spawner.objVy = pObjvy
     spawner.x = pX
     spawner.y = pY
-    spawner.timer = 5
+    spawner.timer = 0
     spawner.type = pType
 
     spawner.Update = function (dt)
         spawner.timer = spawner.timer - dt
         if spawner.timer < 0 then
-            spawner.timer = math.random(0.3,1)
+            spawner.timer = math.random(0.5,2)
 
             if spawner.type == "MineCart" then
-                mineCartManager.newCart(spawner.x,spawner.y)
+                local cart = mineCartManager.newCart(spawner.x,spawner.y)
+                cart.vx = spawner.objVx
+                cart.vy = spawner.objVy
             end
 
 

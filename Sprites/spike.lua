@@ -32,7 +32,6 @@ spikeManager.newSpike = function (pX,pY)
     end
 
     spike.Draw = function ()
-        print("im draw")
         love.graphics.draw(spikeImg,spike.x,spike.y)
     end
     return spike

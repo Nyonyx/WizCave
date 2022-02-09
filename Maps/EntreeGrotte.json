@@ -163,6 +163,23 @@
                  "width":16,
                  "x":1168,
                  "y":448
+                }, 
+                {
+                 "height":22.75,
+                 "id":15,
+                 "name":"",
+                 "properties":[
+                        {
+                         "name":"Next_Map",
+                         "type":"string",
+                         "value":"mine2.json"
+                        }],
+                 "rotation":0,
+                 "type":"End_Map",
+                 "visible":true,
+                 "width":142.25,
+                 "x":547.5,
+                 "y":781
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -171,7 +188,7 @@
          "y":0
         }],
  "nextlayerid":4,
- "nextobjectid":15,
+ "nextobjectid":16,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.7.0",

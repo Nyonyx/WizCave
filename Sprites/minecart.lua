@@ -11,7 +11,7 @@ cartManager.lst_carts = {}
 cartManager.newCart = function (pX,pY)
     local cart = spriteManager.newSprite(pX,pY)
     cart.collideBox = {x=2,y=4,w=16,h=17}
-
+    cart.is_Damage = true -- donne des degats au joueur
     cart.Update = function (dt)
 
         -- TODO : supprimer les carts coter Droit (Map width)
@@ -19,8 +19,6 @@ cartManager.newCart = function (pX,pY)
             util.removeSprite(cart,cartManager.lst_carts)
             cart.supprime = true
         end
-
-        cart.vx = -2
 
         cart.x = cart.x + cart.vx
     end

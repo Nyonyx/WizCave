@@ -108,7 +108,7 @@ MapManager.create = function (pTiledJson,pTileDict,pName)
             for i, obj in ipairs(jsonMap.layers[lay].objects) do
                 
                 local props = util.EnsureObject(obj.properties)
-
+                if props == nil then props = {} end
                 if obj.type == "Player_Spawn" then
                     Map.playerSpawn = {x = obj.x, y = obj.y}
 
@@ -121,9 +121,9 @@ MapManager.create = function (pTiledJson,pTileDict,pName)
                 elseif obj.type == "Bat" then
                     batManager.newBat(obj.x,obj.y)
                 elseif obj.type == "Gobelin" then
-                    gobelinManager.newGobelin(obj.x,obj.y-16)
+                    gobelinManager.newGobelin(obj.x,obj.y-16,props.SubType)
                 elseif obj.type == "Spawner" then
-                    SpawnerManager.newSpawner(obj.x,obj.y,props.object)
+                    SpawnerManager.newSpawner(obj.x,obj.y,props.object,props.vx,props.vy)
                 elseif obj.type == "Spike" then
                     spikeManager.newSpike(obj.x,obj.y)
                 end

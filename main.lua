@@ -30,17 +30,18 @@ local currentMap = {}
 
 --------------- Globals ------------
 DEBUG = false
+DEBUG_INFINITE_LIFE = true
+DEBUG_STATE = false
+DRAW_COLLIDER_BOXES = false
 TILE_SIZE = 16
 GRAVITY = 0.13
-CAMERA_SCALING = 5
+CAMERA_SCALING = 6
 FIRSTMAP = "Temple.json"
+--FIRSTMAP = "mine2.json"
 
 LARGEUR_ECRAN = love.graphics.getWidth()
 HAUTEUR_ECRAN = love.graphics.getHeight()
 
-if DEBUG then
-  FIRSTMAP = "EntreeGrotte.json"
-end
 -----------------------------------
 
 local function loadTilesProperties(file)
@@ -79,6 +80,8 @@ function LoadLevel(pLevelName)
 
   
   player = playerManager.newPlayer(currentMap.playerSpawn.x,currentMap.playerSpawn.y)
+  if DEBUG_INFINITE_LIFE then player.maxLife = 1000; player.life = 1000 end
+
   camera = {x = 0, y = 0}
 
   playerManager.init(currentMap)
@@ -91,6 +94,12 @@ function LoadLevel(pLevelName)
   
   
   ---------------
+  -- TEST
+  if DEBUG then
+   -- batManager.newBat(player.x,player.y-32)
+    --slimeManager.newSlime(player.x,player.y-32)
+    --gobelinManager.newGobelin(player.x,player.y-32)
+  end
 
 
 end

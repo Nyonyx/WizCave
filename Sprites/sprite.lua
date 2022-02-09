@@ -42,7 +42,7 @@ spriteManager.drawAll = function ()
 	for i, sprite in ipairs(spriteManager.lst_sprites) do
 		sprite.Draw()
 
-		if DEBUG then
+		if DEBUG and DRAW_COLLIDER_BOXES then
 			love.graphics.rectangle("line",sprite.x + sprite.collideBox.x,sprite.y + sprite.collideBox.y,
 			sprite.collideBox.w,sprite.collideBox.h)
 		end
@@ -63,20 +63,20 @@ spriteManager.collide_map = function(pSprite,pDir,pMap)
 	local x2 = 0; local y2 = 0
 
 	if pDir == "left" then
-	   x1=x-0    y1=y+3
-	   x2=x-0    y2=y+h-3
+	   x1=x-1    y1=y+3
+	   x2=x-1    y2=y+h-3
 
 	elseif pDir == "right" then
-	   x1=x+w+0  y1=y+3
-	   x2=x+w+0  y2=y+h-3
+	   x1=x+w+1  y1=y+3
+	   x2=x+w+1  y2=y+h-3
 
 	elseif pDir == "up" then
-	   x1=x+3    y1=y-0
-	   x2=x+w-3  y2=y-0
+	   x1=x+3    y1=y-1
+	   x2=x+w-3  y2=y-1
 
 	elseif pDir == "down" then
-	   x1=x+3    y1=y+h+0
-	   x2=x+w-3  y2=y+h+0
+	   x1=x+3    y1=y+h+1
+	   x2=x+w-3  y2=y+h+1
 	end
 
 	if pMap.isSolidAt(x1,y1) or pMap.isSolidAt(x2,y2) then

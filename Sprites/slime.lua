@@ -1,5 +1,6 @@
 local spriteManager = require("Sprites.sprite")
 local slimeImg = love.graphics.newImage("Images/slime.png")
+local animSystem = require("animation_system")
 local util = require("util")
 -- TODO : deplacer les fonctions AlignOnline et collide_with_map
 -- du module slime et joueur vers un autre module
@@ -7,7 +8,7 @@ local util = require("util")
 
 local function AlignOnLine(pSprite)
     local lig = math.floor((pSprite.y + TILE_SIZE/2)/TILE_SIZE) + 1
-    pSprite.y = (lig-1)*TILE_SIZE
+    pSprite.y = ((lig-1)*TILE_SIZE)
 end
 
 local function AlignOnColumn(pSprite)
@@ -16,28 +17,33 @@ local function AlignOnColumn(pSprite)
 end
 
 -- Detection des collisions avec la map
-local function collide_with_map(pPlayer,pMap)
-	if pPlayer.vy > 0 then
-		if spriteManager.collide_map(pPlayer,"down",pMap) then
-			pPlayer.vy = 0
-            AlignOnLine(pPlayer)
-            pPlayer.is_Grounded = true
+local function collide_with_map(pSlime,pMap)
+	if pSlime.vy > 0 then
+		if spriteManager.collide_map(pSlime,"down",pMap) then
+            --pSlime.y = pSlime.y - pSlime.vy
+            AlignOnLine(pSlime)
+			pSlime.vy = 0
+            --AlignOnLine(pSlime)
+            --pSlime.y = pSlime.y + TILE_SIZE-(pSlime.collideBox.y +pSlime.collideBox.h)
+            pSlime.is_Grounded = true
+            
 		end
-	elseif pPlayer.vy < 0 then
-		if spriteManager.collide_map(pPlayer,"up",pMap) then
-			pPlayer.vy = 0	
-            AlignOnLine(pPlayer)	
+	elseif pSlime.vy < 0 then
+		if spriteManager.collide_map(pSlime,"up",pMap) then
+            
+			pSlime.vy = 0	
 		end
 	end
-	if pPlayer.vx > 0 then
-		if spriteManager.collide_map(pPlayer,"right",pMap) then
-			pPlayer.vx = 0	
-            AlignOnColumn(pPlayer)	
+	if pSlime.vx > 0 then
+		if spriteManager.collide_map(pSlime,"right",pMap) then
+			pSlime.vx = 0	
+            --AlignOnColumn(pSlime)	
+            --pSlime.x = pSlime.x + pSlime.collideBox.x
 		end
-	elseif pPlayer.vx < 0 then
-		if spriteManager.collide_map(pPlayer,"left",pMap) then
-			pPlayer.vx = 0	
-            AlignOnColumn(pPlayer)		
+	elseif pSlime.vx < 0 then
+		if spriteManager.collide_map(pSlime,"left",pMap) then
+			pSlime.vx = 0	
+            --AlignOnColumn(pSlime)		
 		end
 	end
 end
@@ -62,7 +68,9 @@ slimeManager.newSlime = function (pX,pY)
 
 
     slime.is_Damage = true -- donne des degats au joueur
-
+    animSystem.initAnimSystem(slime,slimeImg,16,16)
+    animSystem.addAnim(slime,"IDLE",{0,1},3,true)
+    animSystem.startAnimation(slime,"IDLE")
     -- apellé quand il recoit des dommages
     slime.damage = function ()
         slime.supprime = true
@@ -82,7 +90,7 @@ slimeManager.newSlime = function (pX,pY)
     end
 
     slime.Update = function (dt)
-
+        animSystem.updateAnim(slime,dt)
         -- si le joueur proche, peut commencer a sauter
         if util.dist(slime.x + 8,slime.y + 8,player.x + 16,player.y + 16) < 300 then
             slime.timerJump = slime.timerJump - dt
@@ -111,7 +119,15 @@ slimeManager.newSlime = function (pX,pY)
     end
 
     slime.Draw = function ()
-        love.graphics.draw(slimeImg,slime.x,slime.y)
+        local quad = nil
+        if slime.is_Grounded then
+            animSystem.drawAnim(slime,false)
+        else
+            quad = love.graphics.newQuad(32,0,16,16,slimeImg:getWidth(),slimeImg:getHeight())
+            love.graphics.draw(slimeImg,quad,slime.x,slime.y)
+        end
+
+
     end
 
     table.insert(slimeManager.lst_slime,slime)
